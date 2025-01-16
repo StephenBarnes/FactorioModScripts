@@ -2,7 +2,7 @@
 
 # Given a Factorio mod folder, creates a zip for upload to the mod portal. Runs some sanity checks on the mod folder.
 
-find . -maxdepth 1 -name "*.zip" -type f -delete
+# find . -maxdepth 1 -name "*.zip" -type f -delete
 
 folder=$1
 
