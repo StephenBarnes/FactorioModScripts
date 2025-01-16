@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Given PNG images, scales them to 64x64 and makes 4 mipmaps.
+# Given PNG images, scales them to 64x64 and makes 4 mipmaps. Use this for icon graphics.
 
 for f in "$@"; do
   base="${f%.png}"

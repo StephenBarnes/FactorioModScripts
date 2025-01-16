@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Given PNG image files, resizes them to 256x256 and makes 4 mipmaps. Use this for technology images.
+# Given PNG image files, resizes them to 256x256 and makes 4 mipmaps. Use this for images for Factorio techs.
 
 for f in "$@"; do
   base="${f%.png}"
