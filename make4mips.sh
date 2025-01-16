@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Given PNG images, scales them to 64x64 and makes 4 mipmaps.
+
 for f in "$@"; do
   base="${f%.png}"
 

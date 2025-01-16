@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Given some GIMP xcf files, creates PNGs of them scaled to 64x64 with 4 mipmaps.
+
 for f in "$@"; do
   base="${f%.xcf}"
   out="${base}.png"
