@@ -16,6 +16,7 @@ import datetime
 import subprocess
 import re
 import shutil
+import traceback # Added for better error reporting
 
 # --- Configuration ---
 TMP_DIR = "/tmp"
@@ -41,7 +42,7 @@ def generate_filenames():
 def process_node_buffer(node_buffer, debug):
     """
     Processes a list of lines representing a single node block.
-    Adds/updates labels and sets shape to rectangle.
+    Adds/updates labels, sets shape to rectangle, and updates LabelGraphics text.
 
     Args:
         node_buffer (list): List of strings, lines of the node block.
@@ -55,8 +56,8 @@ def process_node_buffer(node_buffer, debug):
     if debug:
         print("-" * 20)
         print(f"DEBUG: Processing Node Buffer (length {len(node_buffer)}):")
-        #for i, line in enumerate(node_buffer): print(f"  [{i}] {line}")
-
+        # Uncomment to see the raw buffer being processed
+        # for i, line in enumerate(node_buffer): print(f"  [{i}] {line}")
 
     processed_lines = []
     node_name = None
@@ -68,20 +69,32 @@ def process_node_buffer(node_buffer, debug):
     original_type_line_index = -1
     type_found_in_graphics = False
     name_line_index = -1 # Index where name was found
+    # --> New state variables for LabelGraphics
+    has_label_graphics = False
+    label_graphics_start_index = -1
+    label_graphics_end_index = -1
+    original_text_line_index = -1
+    text_found_in_label_graphics = False
+    # <-- End new state variables
 
     # --- Regex Patterns ---
     node_name_pattern = re.compile(r'^\s*name\s+"([^"]+)"')
     label_pattern = re.compile(r'^\s*label\s+"([^"]*)"')
     graphics_start_pattern = re.compile(r'^\s*graphics\s+\[')
     type_pattern = re.compile(r'^\s*type\s+"([^"]+)"')
-    # Match graphics end ']' (assumes indent 4 or more)
-    graphics_end_pattern = re.compile(r'^\s{4,}\]')
+    # --> New patterns for LabelGraphics
+    label_graphics_start_pattern = re.compile(r'^\s*LabelGraphics\s+\[')
+    text_pattern = re.compile(r'^\s*text\s+"([^"]*)"')
+    # <-- End new patterns
+    # Match graphics/LabelGraphics end ']' (assumes indent 4 or more)
+    sub_block_end_pattern = re.compile(r'^\s{4,}\]')
     # Match node end ']' (assumes indent 2)
     node_end_pattern = re.compile(r'^\s{2}\]')
 
 
     # --- Pass 1: Find key elements and indices in the buffer ---
     in_graphics = False
+    in_label_graphics = False # Track context within LabelGraphics
     for i, line in enumerate(node_buffer):
         # Find Node Name
         name_match = node_name_pattern.match(line)
@@ -103,7 +116,15 @@ def process_node_buffer(node_buffer, debug):
             in_graphics = True
             graphics_start_index = i
             if debug: print(f"  DEBUG: Found graphics start at index {i}")
-            continue # Move to next line after finding graphics start
+            continue
+
+        # Find LabelGraphics Block Start
+        if label_graphics_start_pattern.match(line):
+            has_label_graphics = True
+            in_label_graphics = True
+            label_graphics_start_index = i
+            if debug: print(f"  DEBUG: Found LabelGraphics start at index {i}")
+            continue
 
         # Inside Graphics Block
         if in_graphics:
@@ -114,14 +135,27 @@ def process_node_buffer(node_buffer, debug):
                 if debug: print(f"  DEBUG: Found existing type at index {i}")
 
             # Find Graphics Block End
-            # Use indent check as primary, fallback to simple ']' if needed
-            if line.strip() == ']' and line.startswith('    '): # Typical GML graphics indent
+            if sub_block_end_pattern.match(line): # Check if it's a closing bracket for the sub-block
                 in_graphics = False
                 graphics_end_index = i
                 if debug: print(f"  DEBUG: Found graphics end at index {i}")
 
+        # Inside LabelGraphics Block
+        if in_label_graphics:
+            # Find Existing Text
+            if text_pattern.match(line):
+                original_text_line_index = i
+                text_found_in_label_graphics = True
+                if debug: print(f"  DEBUG: Found existing LabelGraphics text at index {i}")
 
-    # --- Determine Target Label ---
+            # Find LabelGraphics Block End
+            if sub_block_end_pattern.match(line): # Check if it's a closing bracket for the sub-block
+                in_label_graphics = False
+                label_graphics_end_index = i
+                if debug: print(f"  DEBUG: Found LabelGraphics end at index {i}")
+
+
+    # --- Determine Target Label (used for both 'label' and 'LabelGraphics text') ---
     target_label = ""
     if label_value is not None:  # Use existing label if found
         target_label = label_value.lower()
@@ -130,27 +164,29 @@ def process_node_buffer(node_buffer, debug):
         target_label = node_name.lower()
         if debug: print(f"  DEBUG: Using node name '{node_name}', lowercased: '{target_label}'")
     else:
-         if debug: print(f"  DEBUG: WARNING - No node name found in buffer, cannot generate label.")
+         if debug: print(f"  DEBUG: WARNING - No node name found in buffer, cannot generate label/text.")
 
 
     # --- Prepare New/Replacement Lines ---
-    # Indentation matters for generated lines
     label_indent = "  " # Typical label indent
     graphics_indent = "  " # Typical graphics block indent
     type_indent = "    " # Typical type indent within graphics
+    labelgraphics_text_indent = "    " # Typical text indent within LabelGraphics
 
     new_label_line = f'{label_indent}label "{target_label}"' if target_label else None
     new_type_line = f'{type_indent}type "rectangle"'
     new_graphics_start_line = f'{graphics_indent}graphics ['
     new_graphics_end_line = f'{graphics_indent}]'
+    # --> New line for LabelGraphics text
+    new_labelgraphics_text_line = f'{labelgraphics_text_indent}text "{target_label}"' if target_label else None
+    # <-- End new line
 
     label_handled = False
     type_handled = False
+    labelgraphics_text_handled = False # Track if text was replaced
 
     # --- Pass 2: Construct the new node block ---
-    # Create a copy to modify, or build a new list
     temp_processed_lines = []
-    inserted_graphics_indices = None # Track where new graphics block is inserted
 
     for i, line in enumerate(node_buffer):
 
@@ -160,8 +196,7 @@ def process_node_buffer(node_buffer, debug):
                 temp_processed_lines.append(new_label_line)
                 label_handled = True
                 if debug: print(f"  DEBUG: Replaced line {i} with new label line.")
-            else:
-                 if debug: print(f"  DEBUG: Skipped replacing label at line {i} as no target label generated.")
+            # else: pass # Don't add original or new if no target label
             continue # Skip adding the original label line
 
         # 2. Handle Type Replacement (within existing graphics block)
@@ -171,20 +206,54 @@ def process_node_buffer(node_buffer, debug):
             if debug: print(f"  DEBUG: Replaced line {i} with new type line.")
             continue # Skip adding the original type line
 
-        # 3. Add the original line if not replaced
+        # 3. Handle LabelGraphics Text Replacement
+        if i == original_text_line_index:
+            if new_labelgraphics_text_line:
+                 temp_processed_lines.append(new_labelgraphics_text_line)
+                 labelgraphics_text_handled = True
+                 if debug: print(f"  DEBUG: Replaced line {i} with new LabelGraphics text line.")
+            # else: pass # Don't add original or new if no target label
+            continue # Skip adding the original text line
+
+        # 4. Add the original line if not replaced above
         temp_processed_lines.append(line)
 
         # --- Insertions (happen *after* adding the current line) ---
 
-        # 4. Insert New Label (if none existed) - Insert after name line
+        # 5. Insert New Label (if none existed) - Insert after name line
         if i == name_line_index and not label_handled and original_label_line_index == -1:
             if new_label_line:
-                temp_processed_lines.append(new_label_line)
-                label_handled = True
-                if debug: print(f"  DEBUG: Inserted new label line after name line (index {i}).")
+                # Check if the next line is LabelGraphics, insert before it if so
+                next_line_is_label_graphics = False
+                if (i + 1) < len(node_buffer) and label_graphics_start_pattern.match(node_buffer[i+1]):
+                    next_line_is_label_graphics = True
 
-        # 5. Insert New Type (if graphics existed but type didn't) - Insert before graphics end ']'
-        if i == graphics_end_index and not type_handled and not type_found_in_graphics:
+                if next_line_is_label_graphics:
+                    # Insert label *before* the name line was added to temp_processed_lines
+                    # This requires inserting into temp_processed_lines at the correct index
+                    # Find index of name line in temp_processed_lines
+                    name_line_in_temp_idx = -1
+                    for k, l in enumerate(temp_processed_lines):
+                         if l == node_buffer[i]: # Find the name line we just added
+                             name_line_in_temp_idx = k
+                             break
+                    if name_line_in_temp_idx != -1:
+                         temp_processed_lines.insert(name_line_in_temp_idx + 1, new_label_line) # Insert after
+                         if debug: print(f"  DEBUG: Inserted new label line after name line (index {i}).")
+                    else: # Fallback if finding the line fails (shouldn't happen)
+                         temp_processed_lines.append(new_label_line)
+                         if debug: print(f"  DEBUG: Inserted new label line after name line (index {i}) (fallback append).")
+
+                else:
+                    # Original logic: Append after adding the name line
+                     temp_processed_lines.append(new_label_line)
+                     if debug: print(f"  DEBUG: Inserted new label line after name line (index {i}).")
+
+                label_handled = True
+
+
+        # 6. Insert New Type (if graphics existed but type didn't) - Insert before graphics end ']'
+        if i == graphics_end_index and has_graphics_block and not type_handled and not type_found_in_graphics:
              # Insert *before* the line just added (which is the graphics ']')
             temp_processed_lines.insert(-1, new_type_line)
             type_handled = True
@@ -192,21 +261,19 @@ def process_node_buffer(node_buffer, debug):
 
     # --- Post-Iteration Modifications ---
 
-    # 6. Insert Missing Graphics Block (if none existed)
-    #    Find insertion point (after name/label, before node ']')
+    # 7. Insert Missing Graphics Block (if none existed)
     if not has_graphics_block:
         insert_point = -1
         # Try inserting after the (potentially new) label line
+        label_line_idx = -1
+        name_line_idx_in_temp = -1
         for idx, l in enumerate(temp_processed_lines):
-             if label_pattern.match(l):
-                 insert_point = idx + 1
-                 break
-        # Fallback: insert after name line
-        if insert_point == -1:
-            for idx, l in enumerate(temp_processed_lines):
-                if node_name_pattern.match(l):
-                    insert_point = idx + 1
-                    break
+             if label_pattern.match(l): label_line_idx = idx
+             if node_name_pattern.match(l): name_line_idx_in_temp = idx # Find name in temp list
+
+        if label_line_idx != -1: insert_point = label_line_idx + 1
+        elif name_line_idx_in_temp != -1: insert_point = name_line_idx_in_temp + 1
+
         # Fallback: insert before the node's closing ']'
         if insert_point == -1:
              for idx, l in reversed(list(enumerate(temp_processed_lines))):
@@ -227,8 +294,7 @@ def process_node_buffer(node_buffer, debug):
              if debug: print(f"  DEBUG: WARNING - Could not find suitable insertion point for missing graphics block.")
 
 
-    # 7. Final Fallback for Label Insertion (if still not handled, e.g., no name found)
-    #    Insert before the node's closing ']'
+    # 8. Final Fallback for Label Insertion (if still not handled)
     if not label_handled and new_label_line:
         insert_point = -1
         for idx, l in reversed(list(enumerate(temp_processed_lines))):
@@ -239,8 +305,7 @@ def process_node_buffer(node_buffer, debug):
              temp_processed_lines.insert(insert_point, new_label_line)
              label_handled = True
              if debug: print(f"  DEBUG: Inserted label line before node end ']' (fallback).")
-        else:
-             if debug: print(f"  DEBUG: WARNING - Could not find node end ']' to insert fallback label.")
+        # else: pass # Cannot insert if end bracket wasn't found
 
 
     processed_lines = temp_processed_lines
@@ -271,13 +336,11 @@ def modify_gml_content(gml_content, debug=False):
     for i, line in enumerate(lines):
         # Detect node start
         if node_start_pattern.match(line):
-            # If already in a node, process the previous buffer first (error recovery)
             if in_node and node_buffer:
                 if debug: print(f"DEBUG: WARNING - Line {i+1}: New 'node [' found before previous one closed? Processing previous buffer.")
                 processed_node = process_node_buffer(node_buffer, debug)
                 new_lines.extend(processed_node)
 
-            # Start new node buffer
             in_node = True
             node_buffer = [line]
             if debug: print(f"DEBUG: Line {i+1}: Found 'node [', starting buffer.")
@@ -285,27 +348,28 @@ def modify_gml_content(gml_content, debug=False):
         # Inside a node block
         elif in_node:
             node_buffer.append(line)
-            # Detect node end (check indentation carefully)
             if node_end_pattern.match(line): # Check if it's the node's closing bracket
                 if debug: print(f"DEBUG: Line {i+1}: Found potential node closing ']', processing buffer.")
                 processed_node = process_node_buffer(node_buffer, debug)
                 new_lines.extend(processed_node)
                 in_node = False
-                node_buffer = [] # Clear buffer
-            # else: continue buffering lines within the node
+                node_buffer = []
 
         # Outside a node block
         else:
             new_lines.append(line)
 
-    # If loop finishes while still in_node (e.g., file ends before node ']')
     if in_node and node_buffer:
          if debug: print("DEBUG: WARNING - End of file reached while still in node block. Processing final buffer.")
          processed_node = process_node_buffer(node_buffer, debug)
          new_lines.extend(processed_node)
 
     if debug: print("DEBUG: Finished GML modification process.")
-    return "\n".join(new_lines)
+    # Join lines and ensure final newline
+    result = "\n".join(new_lines)
+    if result and not result.endswith('\n'):
+        result += '\n'
+    return result
 
 
 # --- Main Execution ---
@@ -313,17 +377,13 @@ if __name__ == "__main__":
     check_gv2gml()
 
     print("Paste your DOT file content below. Press Ctrl+D when finished.", file=sys.stderr)
-    dot_content = "" # Initialize
+    dot_content = ""
     try:
         dot_content = sys.stdin.read()
-        if dot_content: # Check if any content was read before EOF
+        if dot_content:
              print("\nEOF detected. Processing input.", file=sys.stderr)
         else:
              print("\nEOF detected, but no input received.", file=sys.stderr)
-
-    except EOFError:
-        # This might not be strictly necessary with sys.stdin.read()
-        print("\nEOF signal received.", file=sys.stderr)
     except Exception as e:
         print(f"\nError reading stdin: {e}", file=sys.stderr)
         sys.exit(1)
@@ -336,7 +396,7 @@ if __name__ == "__main__":
 
     # 1. Save DOT file
     try:
-        with open(dot_filepath, 'w') as f:
+        with open(dot_filepath, 'w', encoding='utf-8') as f:
             f.write(dot_content)
         print(f"DOT content saved to: {dot_filepath}", file=sys.stderr)
     except IOError as e:
@@ -347,12 +407,10 @@ if __name__ == "__main__":
     print(f"Running gv2gml to convert to: {gml_filepath}", file=sys.stderr)
     command = ["gv2gml", dot_filepath, "-o", gml_filepath]
     try:
-        # Use shell=False (default and safer)
         result = subprocess.run(command, check=True, capture_output=True, text=True, encoding='utf-8')
         if DEBUG and result.stdout:
              print(f"DEBUG gv2gml stdout:\n{result.stdout}", file=sys.stderr)
         if result.stderr:
-             # Always print stderr from gv2gml as it might contain warnings
              print(f"gv2gml stderr:\n{result.stderr}", file=sys.stderr)
     except FileNotFoundError:
         print(f"Error: 'gv2gml' command not found during execution.", file=sys.stderr)
@@ -361,7 +419,6 @@ if __name__ == "__main__":
         print(f"Error running gv2gml:", file=sys.stderr)
         print(f"Command: {' '.join(e.cmd)}", file=sys.stderr)
         print(f"Return code: {e.returncode}", file=sys.stderr)
-        # Decode stderr/stdout if they are bytes
         stderr_str = e.stderr.decode('utf-8', errors='ignore') if isinstance(e.stderr, bytes) else e.stderr
         stdout_str = e.stdout.decode('utf-8', errors='ignore') if isinstance(e.stdout, bytes) else e.stdout
         print(f"Stderr:\n{stderr_str}", file=sys.stderr)
@@ -379,17 +436,13 @@ if __name__ == "__main__":
     # 3. Read and Modify GML file
     print(f"Modifying GML file: {gml_filepath}", file=sys.stderr)
     try:
-        # Specify encoding, often UTF-8
         with open(gml_filepath, 'r', encoding='utf-8') as f:
             original_gml_content = f.read()
 
         modified_gml_content = modify_gml_content(original_gml_content, debug=DEBUG)
 
-        # Write modified content back, ensure newline at end
         with open(gml_filepath, 'w', encoding='utf-8') as f:
             f.write(modified_gml_content)
-            if not modified_gml_content.endswith('\n'):
-                 f.write('\n') # Ensure final newline
 
     except FileNotFoundError:
          print(f"Error: GML file {gml_filepath} not found after conversion.", file=sys.stderr)
@@ -399,15 +452,14 @@ if __name__ == "__main__":
         sys.exit(1)
     except Exception as e:
          print(f"An unexpected error occurred during GML modification: {e}", file=sys.stderr)
-         import traceback
-         traceback.print_exc(file=sys.stderr) # Print traceback for easier debugging
+         traceback.print_exc(file=sys.stderr)
          print(f"Original GML saved at: {gml_filepath}", file=sys.stderr)
          sys.exit(1)
 
     # 4. Success message with final file path
     print(f"\nSuccessfully processed graph.", file=sys.stderr)
     print(f"Final modified GML file is located at:")
-    print(gml_filepath) # Print the final path to stdout
+    print(gml_filepath)
 
     # Optional: Clean up the original .dot file
     # try:
