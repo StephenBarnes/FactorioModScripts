@@ -38,6 +38,6 @@ fi
 archive="${folder%/}_$version.zip"
 
 echo "Zipping to $archive..."
-zip -rq "$archive" "$folder" -x "*/.git*" -x "*/.vscode*" -x "*/notes*" -x "*/modportal*"
+zip -8 -rq "$archive" "$folder" -x "*/.git*" -x "*/.vscode*" -x "*/notes*" -x "*/modportal*"
 
 echo "Created $archive"
