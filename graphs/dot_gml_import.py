@@ -165,6 +165,7 @@ def process_node_buffer(node_buffer, debug):
         if debug: print(f"  DEBUG: Using node name '{node_name}', lowercased: '{target_label}'")
     else:
          if debug: print(f"  DEBUG: WARNING - No node name found in buffer, cannot generate label/text.")
+    target_label = target_label.replace("&", "+") # Prevent error from "&" character.
 
 
     # --- Prepare New/Replacement Lines ---
