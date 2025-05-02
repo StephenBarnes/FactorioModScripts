@@ -34,6 +34,7 @@ def get_node_info(node_element):
     node_label_element = node_element.find('.//y:NodeLabel', NAMESPACES)
     if node_label_element is not None and node_label_element.text:
         label = node_label_element.text.strip()
+        label = label.replace("\n", " ")
 
     color = None
     fill_element = node_element.find('.//y:Fill', NAMESPACES)
