@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 
 # This script is for importing recipe graphs written in DOT format into yEd.
-# General process: Ask AI for recipe system ideas, and ask it to give you its suggestions as a recipe graph in DOT format. Then run this script, paste in DOT text. Then open GML file in yEd, and use auto-layout to make it readable.
 # Code written by Gemini 2.5 Pro.
 
-# The script asks you to paste a graph in DOT format.
+# Process for using this: Write up recipes or design plan, or ask AI to suggest some recipes. Then ask AI to convert it to a DOT graph; see suggested prompt below. Then run this script, paste in DOT text. Then open GML file in yEd; all nodes will be overlapping in the middle of the canvas. Run "fit node to label" in yEd, then use auto-layout options to separate out the nodes and make it readable.
+# Suggested prompt for AI: Write a code block with a graph of all these recipes, in the DOT language for GraphViz, where you have a node colored "#FFCC99" for every recipe, and a node colored "#CCFFFF" for every substance (item/fluid), with arrows from each item/fluid node to all the recipes that use it, and arrows from each recipe node to all the items/fluids that are produced by it. Do not use the "class=" attribute in your DOT code.
+
+# When you run this script, it will ask you to paste a graph in DOT format.
 # The DOT graph is converted to GML by running `gv2gml`. Both DOT and GML files are saved in /tmp.
-# The GML graph is then fixed up a bit (ensuring all nodes have labels, making all labels lowercase) then saved in /tmp.
+# The GML graph is then fixed up a bit (ensuring all nodes have labels, making all labels lowercase, fixing basic issues) then saved in /tmp.
 # Then the GML file can be imported into yEd.
 # You need to install gv2gml before running.
 
@@ -20,7 +22,7 @@ import traceback # Added for better error reporting
 
 # --- Configuration ---
 TMP_DIR = "/tmp"
-DEBUG = True  # Set to True to enable debug printing, False to disable
+DEBUG = False  # Set to True to enable debug printing, False to disable
 
 # --- Helper Functions ---
 def check_gv2gml():
@@ -166,6 +168,7 @@ def process_node_buffer(node_buffer, debug):
     else:
          if debug: print(f"  DEBUG: WARNING - No node name found in buffer, cannot generate label/text.")
     target_label = target_label.replace("&", "+") # Prevent error from "&" character.
+    target_label = target_label.replace("\\n", "\n") # Replace \\n with explicit newline.
 
 
     # --- Prepare New/Replacement Lines ---
