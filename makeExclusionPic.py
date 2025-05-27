@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-# This script produces a PNG to show cross-shpaed exclusion zones for certain entities. For use as data.AssemblingMachinePrototype.radius_visualisation_specification.
-# Used in LegendarySpaceAge for the borehole mining drill and air separator, see the code for actually creating the exclusion zones. This PNG is just for the visualization.
+# This script produces a PNG to show cross-shaped zones for certain entities. For use as data.AssemblingMachinePrototype.radius_visualisation_specification.
+# Used in LegendarySpaceAge for the exclusion zones of borehole mining drills, telescopes, and air separators; see the code for actually creating the exclusion zones. This PNG is just for the visualization when placing the building.
 
 # Script written by Claude 3.7 Sonnet.
 
