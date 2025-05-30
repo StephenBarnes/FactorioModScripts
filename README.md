@@ -146,7 +146,23 @@ There are several goals you could try to achieve in an overhaul mod, and it's im
 * You can add lots of neat things to use or do. For example, adding new vehicles, new guns/grenades/landmines, new planets.
 * You can aim to make the game significantly more difficult, or easier.
 * You can try to make complex recipe systems that interact with each other in interesting ways, creating puzzles.
-* You can try to aim for realism. A full commitment to realism often requires doing things that are at odds with ordinary game design goals - for example, having lots of metals that have almost the same uses, many waste byproducts, many items/fluids that are involved in only one recipe chain, and many items/fluids with complex chemical names that are not memorable for people who aren't industrial chemists.
+* You can try to aim for chemical/industrial realism.
+
+### On realism as a goal
+
+A full commitment to realism often requires doing things that are at odds with ordinary game design goals, such as:
+
+* Having lots of metals that have almost the same uses
+* Many waste byproducts
+* Many items/fluids that are involved in only one recipe chain
+* Many items/fluids with complex chemical names that are not memorable for people who aren't industrial chemists.
+
+You can consider compromising slightly on realism to avoid some of these issues, such as:
+
+* Merging multi-step processes into single recipes, to eliminate intermediate items that would only have one source and use in the mod
+* Merging together chemicals with almost the same sources and uses (such as merging sodium and potassium, meaning that "salt" represents both sodium and potassium chloride, and "alkali" ash is either soda ash or potash, and "niter" is both sodium and potassium nitrate)
+* Using more well-known common names for chemicals (like "lye" instead of sodium hydroxide)
+* Naming substances based on their role in the mod instead of their chemistry, for example renaming trichlorosilane to "silicon gas" and silicon tetrachloride to "silicon waste gas"
 
 ## Looking at other overhaul mods
 
@@ -155,12 +171,16 @@ It is helpful to look through other overhaul mods to get ideas for design. I don
 ## General advice
 
 * Consider making charts of recipes and items with arrows between them, to help understand your recipe systems. I use [yEd](https://www.yworks.com/products/yed/download) for this.
-* Consider making a writeup of your mod's design goals and your current design, and then pasting the entire thing into an AI. At the top, put a question or aspect you're trying to design. The AI will sometimes have good ideas, and they have a greater breadth of knowledge about real industrial processes than any human being. I have found Gemini 2.5 Pro to be fairly good at this, although its designs tend to be excessively complex and focused on realism. Sonnet 4 and o3 are worse than Gemini 2.5 Pro in my experience, and are more prone to persistent misunderstandings about what is possible in Factorio, such as thinking that Factorio is a 3D game, or thinking that two recipes producing the same item can produce that item with different properties, etc. AIs also have an annoying fixation on environmentalism (which is fine in real life, but not appropriate for Factorio) and may refuse to help with recipes for explosives, poisons, nuclear tech, etc. 
+* Consider making a writeup of your mod's design goals and your current design, and then pasting the entire thing into an AI. At the top, put a question or aspect you're trying to design. The AI will sometimes have good ideas, and they have a greater breadth of knowledge about real industrial processes than any human being. I have found Gemini 2.5 Pro to be fairly good at this, although its designs tend to be excessively complex and focused on realism. Sonnet 4 and O3 are worse than Gemini 2.5 Pro in my experience, and are more prone to persistent misunderstandings about what is possible in Factorio, such as thinking that Factorio is a 3D game, or thinking that two recipes producing the same item can produce that item with different properties, etc. AIs also have an annoying fixation on environmentalism (which is fine in real life, but not appropriate for Factorio) and may refuse to help with recipes for explosives, poisons, nuclear tech, etc. 
 	* You can ask the AI to output its recipe suggestions as a DOT graph, then use the scripts in this repo (in `graphs` folder) to import them into yEd or convert yEd back into text.
 * Reign in the sadism. Something that seems like an interesting limitation / balance change when you're in the design stage can often turn into a tiresome slog when you actually play the game. Instead of completely banning things like logistic bots, cargo drops, or whatever, consider just not doing that, or just nerfing them.
 	* There is an opposite design problem, where a mod adds some new tool that is better than an existing tool in every way. For example, adding a vehicle that is cheaper, faster, and stronger than a tank. This effectively removes as much content from the game as it adds, because there is no longer any reason to use the worse thing. That said, I haven't seen any Factorio overhaul mods that suffer from this issue. Compare to Minecraft modding where it's the other way around - lots of mods adding overpowered gear, few mods making the game more difficult in an interesting way.
 * Consider using an unrealistic color scheme to differentiate items/fluids. This repo has a `colorscheme-visualizer` folder that you can use to visualize relations and automatically pick analogous colors. The base game uses unrealistic colors (for tungsten and holmium) because if they were realistic they would all be gray like iron/steel plates, making them harder to differentiate and making the planet's color palette uglier. The base game also uses unrealistic colors for iron/copper ore so they match the plate colors. For a substance like magnesium chloride, you could make an icon with the colors of magnesium and chlorine in different parts of the sprite, to help people quickly understand the relations between items/fluids in your mod.
 * Instead of having like 10 different types of ore patches, consider deriving more types of resources from a smaller set of minable patches. I don't think most players like having to set up separate mining outposts and unloading for many different ores; vanilla has 5 types of minable patches on Nauvis which is already enough to be tiresome. You can realistically derive various substances from sorting/washing/leaching existing minables, which are rationalized as mixtures of different minerals. Processing stone can give sand, gravel, calcite, clay, gypsum, phosphate rock, silica, chromite, alumina, rare earths. Raw water from offshore pumps could be boiled or filtered for algae and magnesium/sodium/potassium salts. Slag from smelting one ore could be leached to get another ore. Systems similar to this can be seen in Industrial Revolution 3, Angel's mods, and Seablock.
+
+## Testing overhaul mods
+
+Currently Legendary Space Age includes an `autodebug` directory for automatic data-stage debugging, by running tests like [ensuring recipes can't create water out of nothing](https://github.com/StephenBarnes/LegendarySpaceAge/blob/master/data/autodebug/check-conservation-rules.lua#L116). This is still a work in progress, since much of the overhaul's recipes and items are not implemented yet.
 
 ## Recipe patterns
 
