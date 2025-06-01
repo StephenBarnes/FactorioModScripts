@@ -1,31 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Color Analogy Visualizer</title>
-    <style>
-        body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
-        table { border-collapse: collapse; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        th, td {
-            border: 1px solid #ccc;
-            padding: 10px;
-            min-width: 100px;
-            text-align: center;
-            vertical-align: middle;
-            background-color: #fff; /* Default background */
-        }
-        th { background-color: #e9e9e9; font-weight: bold; }
-        .table-title { font-size: 1.5em; margin-bottom: 10px; }
-        /*.color-cell { Text color will be dynamically adjusted } */
-    </style>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Color Analogy Visualizer</title>
+	<style>
+		body {
+			font-family: sans-serif;
+			margin: 20px;
+			background-color: #f4f4f4;
+			color: #333;
+		}
+		table {
+			border-collapse: collapse;
+			margin-bottom: 20px;
+			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+		}
+		th, td {
+			border: 1px solid #ccc;
+			padding: 10px;
+			min-width: 120px;
+			text-align: center;
+			vertical-align: middle;
+			background-color: #fff;
+			/* Default background */
+		}
+		th {
+			background-color: #e9e9e9;
+			font-weight: bold;
+		}
+		.table-title {
+			font-size: 1.5em;
+			margin-bottom: 10px;
+		}
+		.cell-name {
+			font-weight: 500;
+			margin-bottom: 5px;
+		}
+		.color-info {
+			font-size: 0.35em;
+			line-height: 1;
+			font-family: monospace;
+		}
+	</style>
 </head>
 <body>
-    <h1>Color Analogy Visualizer</h1>
-    <div id="tables-container"></div>
+	<h1>Color Analogy Visualizer</h1>
+	<div id="tables-container"></div>
 
-    <script src="color_utils.js"></script>
-    <script src="page_utils.js"></script>
-    <script src="main.js"></script>
+	<script src="color_utils.js"></script>
+	<script src="page_utils.js"></script>
+	<script src="main.js"></script>
 </body>
 </html>
