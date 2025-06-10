@@ -36,19 +36,26 @@ When using graphics from other people, be aware of their licenses, which may hav
 
 ### Making graphics
 
+Factorio uses 2D sprites, often generated from 3D models using a 45-degree perspective and orthographic projection.
+
 * [Tutorial for making graphics with Blender](https://github.com/malcolmriley/unused-renders/wiki) by Malcolm Riley.
-
-### Layering graphics
-
-You can use [`ItemPrototype.icons`](https://lua-api.factorio.com/latest/prototypes/ItemPrototype.html#icons) to layer multiple icons on top of each other, with an optional tint applied to each one. The base game uses this for barrelled fluids, for example - see the folder `Factorio/data/base/graphics/icons/fluid/barreling/` in your install. This can allow you to make lots of related icons in the game without needing to include all of them in your mod. Note that there are [some issues](https://forums.factorio.com/viewtopic.php?t=98732) with using layered icons that may cause minor graphics bugs that are hard to notice in development. (To avoid these issues, you could write a script that does the layering+shifting+tinting on the image files on your local computer, then ship the finished graphics. I haven't done this yet.)
+* [Galdoc's Tutorials](https://www.youtube.com/@galdocstutorials/videos) are a series of videos on Blender by the creator of [Galdoc's Manufacturing](https://mods.factorio.com/mod/galdocs-manufacturing), an overhaul mod with original machine and icon graphics.
 
 ### Editing graphics
 
 I use GIMP to edit icon sprites. This is not my area of expertise so I can't offer much advice, besides that you should learn how to use layers, how to manipulate selections, and how to use the color tools.
 
+### Layering graphics
+
+You can use [`ItemPrototype.icons`](https://lua-api.factorio.com/latest/prototypes/ItemPrototype.html#icons) to layer multiple icons on top of each other, with an optional tint applied to each one. The base game uses this for barrelled fluids, for example - see the folder `Factorio/data/base/graphics/icons/fluid/barreling/` in your install. This can allow you to make lots of related icons in the game without needing to include all of them in your mod. You can also use this for things like making a "frozen nutrients" icon by putting the nutrient icon as the middle layer between two layers of the ice icon, both tinted to make them semi-transparent.
+
+Note that there are [some issues](https://forums.factorio.com/viewtopic.php?t=98732) with using layered icons that may cause minor graphics bugs that are hard to notice in development. To avoid these issues, you could write a script that does the layering+shifting+tinting on the image files on your local computer, then ship the finished graphics; I haven't done this yet. For the specific issue with icon shadows, you can set `draw_background = true` on multiple layers, if they don't overlap. You can also add an additional back layer that's almost transparent, purely to draw larger background shadows.
+
+For icons of reflective things (like metal items or fluid drops), you can sometimes improve their appearance by splitting the icon into a base layer and a mostly-transparent highlights layer with the bright reflective parts. Then tint the base layer, and overlay it with the *untinted* highlights layer, so that the highlights are still white.
+
 ### AI-generating graphics
 
-I sometimes use Midjourney to generate icon sprites. Unfortunately Midjourney is tuned to generate either realistic photographs of young women or generic fantasy cartoon slop, not Factorio-style sprites of industrial intermediates, so it may take some wrangling to get it to generate what you want. Once you've generated one good image, you can generate variations of it to use as [sprite variations](https://lua-api.factorio.com/latest/prototypes/ItemPrototype.html#pictures) for items. All of these images will require editing before use; some of the scripts in this repo (like `quarter_image.sh` and `transparent_background.sh`) were made specifically for this purpose.
+You can use Midjourney to generate icon sprites. Unfortunately Midjourney is tuned to generate either realistic photographs of young women or generic fantasy cartoon slop, not Factorio-style sprites of industrial intermediates, so it may take some wrangling to get it to generate what you want. Once you've generated one good image, you can generate variations of it to use as [sprite variations](https://lua-api.factorio.com/latest/prototypes/ItemPrototype.html#pictures) for items. Ask for the sprites on a plain black background, and then edit them before use; some of the scripts in this repo (like `quarter_image.sh` and `transparent_background.sh`) were made specifically for this purpose.
 
 Gemini models are useful for adding things to images. For example, I used Gemini to make the condensing turbine graphics for Legendary Space Age, by editing the base-game's steam turbine graphics to add a lid over the turbine part. These models are currently bad at generating new images, but good at making edits.
 
@@ -69,7 +76,7 @@ Factorio's world generation system changed significantly in the 2.0 update. [Thi
 ### Dev environment
 
 * [Factorio Modding Toolkit](https://github.com/justarandomgeek/vscode-factoriomod-debug) includes a VSCode extension making the program aware of the Factorio API, which can help to catch errors and provides shortcuts to documentation.
-* I recommend opening Wube's Lua code directory in a separate IDE window. On Linux+Steam it's at `~/.local/share/Steam/steamapps/common/Factorio/data/`. You can search through this to find the base game's code for defining prototypes.
+* I recommend opening Wube's Lua code directory in a separate IDE window. On Linux+Steam it's at `~/.local/share/Steam/steamapps/common/Factorio/data/` but yours might be in [other places](https://wiki.factorio.com/Application_directory). You can search through this to find the base game's code for defining prototypes.
 * I recommend making a simple mod with only an `info.json` file with dependencies on several testing mods so you can toggle them all on and off easily. Give it a name like "○○○○○○ testing mods" so it's at the top of the mod list. My current mod has dependencies on `"EditorExtensions", "factoryplanner", "creative-space-platform-hub", "circuit-connector-placement-helper"`.
 
 ### Libraries
@@ -98,6 +105,8 @@ Generally these "magic tricks" involve the creation of hidden entity prototypes 
 #### Magic trick examples
 
 * Suppose you want to make properties of entities change depending on their quality. Currently the modding API has extremely limited ability to change how quality affects entities. Instead, you can create a hidden version of the building's prototype for each quality level, and then give those prototypes different properties. In control-stage scripting, you register a handler for when an item/building is placed, then replace it with the correct quality variant. The library mod [Quality Lib](https://mods.factorio.com/mod/quality-lib) has utilities for doing this. (LSA also has a different implementation of this, designed to work in combination with surface-based entity substitutions.) This magic trick is still not perfect (e.g. upgrade planners won't work, and quality-variant items won't be usable in the same recipe, and will give different signals in chests).
+
+* Some entity types, like offshore pumps and boilers, are limited in what they can do. For example, boilers can only take one input fluid and produce one output fluid, and offshore pumps can only produce one output fluid. You can work around this by changing them to furnace or assembling-machine types. For example, boilers in Nullius use the assembling-machine type. (This was also used back in Factorio 1.1 to make offshore pumps require burner fuel or electric power, for example by Industrial Revolution 3, but this is no longer necessary since the OffshorePumpPrototype now supports energy sources.)
 
 * Suppose you want to allow a nuclear reactor to burn either normal fuel cells or breeder fuel cells, and you want the breeder fuel cells to take longer to burn but provide less energy, and therefore much less power. This can't be done by just changing the fuel value; a reactor has the same power for all fuels. You could implement this by changing the reactor to a fluid-burning generator, and then create a hidden furnace that takes in either of the two fuel cells and outputs both the spent fuel cell and a special "energy fluid" into a fluid box linked to the fluid-burning generator; the furnace's recipes produce different amounts/rates of the energy fluid. An alternative approach without hidden entities could be to instead have a different reactor prototype, and either allow the player to craft and place both of them, or add an in-game hotkey or GUI to toggle a reactor to the other type.
 
