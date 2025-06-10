@@ -88,11 +88,15 @@ Some code libraries that you can add as dependencies of your mod. You can import
 * [Quality Lib](https://mods.factorio.com/mod/quality-lib) by Davoness has tools to change values of items/entities for different quality levels; see the "magic tricks" section below.
 * The base game code contains some useful functions, in `core/lualib`.
 
+### Automatic publishing
+
+* [Factorio Mod Template](https://github.com/fgardt/factorio-mod-template) has tools for automatic packaging and uploading.
+* Factorio Modding Toolkit includes a tool for this, explained [here](https://github.com/justarandomgeek/vscode-factoriomod-debug/blob/current/doc/package.md).
+* If you prefer to manually upload zipfiles to the portal, this repo includes a `zipmod.sh` script to zip up mods and run some checks.
+
 ### Starter/template mods
 
-These are mods you can fork and edit instead of writing a mod from scratch.
-
-* [Factorio Example Mod](https://github.com/ZwerOxotnik/factorio-example-mod) by ZwerOxotnik
+* [Factorio Example Mod](https://github.com/ZwerOxotnik/factorio-example-mod) by ZwerOxotnik is a starter/template mod that you can fork and edit instead of writing a mod from scratch.
 
 ### Magic tricks
 
@@ -160,13 +164,6 @@ Here's some additional ideas for magic tricks that I haven't seen implemented.
 * When defining prototypes in code, you can explicitly write the entire table. Alternatively, you can use `table.deepcopy` to copy an existing similar prototype, then change various fields, like the name, icon, `minable.result` or `place_result`, etc. The deepcopy approach has the disadvantage of unexpected interactions with the rest of your mod, or other mods, since the values you think you're copying might have been changed elsewhere. The explicit approach has the disadvantage of needing to set all the fields explicitly, so you risk forgetting to set some more subtle fields like item sounds (pick, drop, inventory_move) and crafting machine tints for recipes. For large overhaul mods the best approach is probably to explicitly define prototypes but using a helper function to easily set / avoid forgetting to set the subtler fields.
 * Some modding effects may require you to run [`surface.find_entities_filtered()`](https://lua-api.factorio.com/latest/classes/LuaSurface.html#find_entities_filtered) on every nth tick so that you can update all buildings/whatever of a specific type on all planets. You may expect this function to be fast, since the engine frequently needs to find all pipes or enemy bases or whatever to update them, so you might think it already has lists of entities by type/name ready to go. However, this is not the case, the function is slow. In my experience, calling this function will cause noticeable lag, like dropping multiple frames every time your script runs. Instead, you can should rely on caching, meaning you run `find_entities_filtered` once when the game starts, and store it in `storage.whatever`. You can listen to events like `on_built_entity` and `on_player_mined_entity` to update the cache without re-running the slow scan.
 
-
-## Other
-
-### Automatic publishing
-
-* Factorio Modding Toolkit includes a tool for this, explained [here](https://github.com/justarandomgeek/vscode-factoriomod-debug/blob/current/doc/package.md).
-* If you prefer to manually upload zipfiles to the portal, this repo includes a `zipmod.sh` script to zip up mods and run some checks.
 
 # Advice on overhaul mod design
 
