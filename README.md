@@ -30,7 +30,7 @@ Crucial background: Factorio mods run in 3 stages: settings, then data/prototype
 
 When using graphics from other people, be aware of their licenses, which may have various requirements, such as requiring you to release your mod under the same license, requiring attribution, etc.
 
-* [Free graphics for modders](https://github.com/snouz/factorio_free_graphics_for_modders) collected by Snouz - large collection of graphics from various mods with fairly open licenses.
+* [Free graphics for modders](https://github.com/snouz/factorio_free_graphics_for_modders) collected by Snouz - large collection of graphics from various mods with open licenses.
 * [Unused Renders](https://github.com/malcolmriley/unused-renders) by Malcolm Riley - large collection of high-quality icons.
 * [Factorio Buildings](https://mods.factorio.com/user/Hurricane046) by Hurricane046 - large collection of high-quality building graphics for Factorio mods, with animations.
 
@@ -73,6 +73,8 @@ Gemini models are useful for adding things to images. For example, I used Gemini
 
 Factorio's world generation system changed significantly in the 2.0 update. [This](https://togos.github.io/togos-example-noise-programs/) was a good tutorial for the old system. The new system works almost the same conceptually, but noise expressions are now written as strings instead of Lua tables. I am not aware of any tutorials for the new worldgen system. If you want to do worldgen coding, I would recommend understanding that tutorial conceptually, then looking at the base game's Lua code and [API docs](https://lua-api.factorio.com/latest/auxiliary/noise-expressions.html).
 
+[Noise Tools](https://mods.factorio.com/mod/noise-tools) by Earendel is a mod that helps to visualize noise expressions for debugging.
+
 ### Dev environment
 
 * [Factorio Modding Toolkit](https://github.com/justarandomgeek/vscode-factoriomod-debug) includes a VSCode extension making the program aware of the Factorio API, which can help to catch errors and provides shortcuts to documentation.
@@ -102,7 +104,7 @@ Some code libraries that you can add as dependencies of your mod. You can import
 
 For most simple changes you might want to make, like changing recipes or properties of items and buildings, you only need to edit prototypes. But in many cases, prototypes will not have a field that does what you want. In this situation, it is often still possible to achieve your aims, but you will need to resort to "magic tricks" involving a combination of hidden prototypes and control-stage scripting.
 
-(Alternatively, you can post a [request](https://forums.factorio.com/viewforum.php?f=28) for Wube to add the API feature that you want, but it will probably not be added. There has also been one attempt that I am aware of to enable direct modding of the Factorio engine, outside of the Lua modding system, but I can't find the repo now and that project was eventually abandoned, partly because allegedly Wube said they would at some point open-source the engine.)
+(Alternatively, you can post a [request](https://forums.factorio.com/viewforum.php?f=28) for Wube to add the API feature that you want, but it will probably not be added. There have also been two attempts that I am aware of to enable direct modding of the Factorio engine, outside of the Lua modding system. One of these is [Rivets](https://github.com/factorio-rivets/rivets-rs), which wasn't fully finished for Factorio 1.1 and hasn't been touched for 2.0 at all. For the other attempt, I can't find the repo now but it was eventually abandoned, partly because allegedly Wube said they would at some point open-source the engine.)
 
 Generally these "magic tricks" involve the creation of hidden entity prototypes / items / surfaces, along with control-stage scripting to create or replace things using these hidden objects. I call them "magic tricks" because they involve doing a bunch of behind-the-scenes stuff not visible to the player to create effects that seem impossible within the engine.
 
@@ -212,6 +214,8 @@ It is helpful to look through other overhaul mods to get ideas for design. I don
 ## Testing overhaul mods
 
 Currently Legendary Space Age includes an `autodebug` directory for automatic data-stage debugging, by running tests like [ensuring recipes can't create water out of nothing](https://github.com/StephenBarnes/LegendarySpaceAge/blob/master/data/autodebug/check-conservation-rules.lua#L116). This is still a work in progress, since much of the overhaul's recipes and items are not implemented yet. The current implementation relies on manually assigning conserved quantities to items/fluids (there's X elemental carbon in each carbon item, and Y elemental carbon in each unit of crude oil fluid, etc.) and checking there's no recipes that create the conserved quantity on net at max productivity. A better implementation would only need a set of seed assignments and then use a matrix solver to check whether there's any way of assigning values to the rest of the items that avoids positive-net recipes.
+
+[Here](https://alt-f4.blog/ALTF4-48/) is an Alt-F4 writeup of how automated unit-testing was done for Angel's mods.
 
 ## Recipe patterns
 
