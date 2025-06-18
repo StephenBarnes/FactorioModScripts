@@ -15,7 +15,7 @@ Below I've collected links to resources for making Factorio mods, plus some note
 
 Crucial background: Factorio mods run in 3 stages: settings, then data/prototype, then control/runtime. [More details.](https://lua-api.factorio.com/latest/auxiliary/data-lifecycle.html) The data/prototype stage uses different types than the control/runtime stage, so the [prototype API docs](https://lua-api.factorio.com/latest/index-prototype.html) are separate from the [runtime API docs](https://lua-api.factorio.com/latest/index-runtime.html). Factorio uses a custom version of Lua with [some changes](https://lua-api.factorio.com/latest/auxiliary/libraries.html).
 
-[The wiki has a general introductory modding tutorial.](https://wiki.factorio.com/Tutorial:Modding_tutorial/Gangsir)
+[The wiki has a general introductory modding tutorial by Gangsir.](https://wiki.factorio.com/Tutorial:Modding_tutorial/Gangsir)
 
 ## Communities
 
@@ -64,10 +64,12 @@ Gemini models are useful for adding things to images. For example, I used Gemini
 
 ### Tutorials for aspects of coding
 
+* If you already know basic programming, you can use [Learn Lua In Y Minutes](https://learnxinyminutes.com/lua/) to quickly get familiar with Lua. You can mostly ignore everything about metatables and classes.
 * [Using settings in mods](https://wiki.factorio.com/Tutorial:Mod_settings)
-* [GUI modding](https://github.com/ClaudeMetz/UntitledGuiGuide/wiki)
 * [Porting mods to 2.0](https://github.com/tburrows13/factorio-2.0-mod-porting-guide)
 * [Localization](https://wiki.factorio.com/Tutorial:Localisation)
+* [GUI modding](https://github.com/ClaudeMetz/UntitledGuiGuide/wiki)
+	* Also see [Factorio GUI Style Guide](https://man.sr.ht/~raiguard/factorio-gui-style-guide/) by Raiguard.
 
 #### World generation / autoplace / noise expressions
 
@@ -77,9 +79,19 @@ Factorio's world generation system changed significantly in the 2.0 update. [Thi
 
 ### Dev environment
 
-* [Factorio Modding Toolkit](https://github.com/justarandomgeek/vscode-factoriomod-debug) includes a VSCode extension making the program aware of the Factorio API, which can help to catch errors and provides shortcuts to documentation.
-* I recommend opening Wube's Lua code directory in a separate IDE window. On Linux+Steam it's at `~/.local/share/Steam/steamapps/common/Factorio/data/` but yours might be in [other places](https://wiki.factorio.com/Application_directory). You can search through this to find the base game's code for defining prototypes.
-* I recommend making a simple mod with only an `info.json` file with dependencies on several testing mods so you can toggle them all on and off easily. Give it a name like "○○○○○○ testing mods" so it's at the top of the mod list. My current mod has dependencies on `"EditorExtensions", "factoryplanner", "creative-space-platform-hub", "circuit-connector-placement-helper"`.
+* [Factorio Modding Toolkit](https://github.com/justarandomgeek/vscode-factoriomod-debug/blob/current/doc/workspace.md) includes a VSCode extension making the editor aware of the Factorio API.
+	* I strongly recommend setting this up. It is very helpful for catching errors and type-checking, and includes a debugger/profiler.
+* I recommend opening Wube's Lua code directory in a separate IDE window. On Linux+Steam it's at `~/.local/share/Steam/steamapps/common/Factorio/data/` but yours might be in [other places](https://wiki.factorio.com/Application_directory). You can search through this to find the base game's code for defining prototypes and locale strings.
+* [Factorio Tools](https://github.com/Hornwitser/factorio_tools) by Hornwitser has command-line tools for debugging/inspecting Factorio-related things, such as figuring out desyncs.
+* I recommend making a simple mod with only an `info.json` file with dependencies on several testing mods so you can toggle them all on and off easily. Give it a name like "○○○○○○ Testing mods" so it's at the top of the mod list. My current mod has dependencies on `"EditorExtensions", "factoryplanner", "creative-space-platform-hub", "circuit-connector-placement-helper"`.
+
+Mods useful when developing mods:
+
+* [Editor Extensions](https://mods.factorio.com/mod/EditorExtensions) by raiguard is useful for testing basically any mod.
+* [Creative Space Platform Hub](https://mods.factorio.com/mod/creative-space-platform-hub) by Quezler is useful for testing stuff involving space platforms.
+* [Noise Tools](https://mods.factorio.com/mod/noise-tools) by Earendel can be used to visualize noise expressions.
+* [Circuit connector placement helper](https://mods.factorio.com/mod/circuit-connector-placement-helper) by Quezler is useful for choosing and placing the circuit connectors of buildings.
+* A planner mod like [Factory Planner](https://mods.factorio.com/mod/factoryplanner) by Therenas is useful for balancing recipes. For example, comparing the raw materials needed to make your modded circuit with the raw materials needed to make base-game blue circuits, or comparing the number of machines and electric energy needed by different recipe paths with the same end product.
 
 ### Libraries
 
@@ -88,7 +100,14 @@ Some code libraries that you can add as dependencies of your mod. You can import
 * [flib / Factorio Library](https://github.com/factoriolib/flib) is a set of utility functions.
 * [PlanetsLib](https://mods.factorio.com/mod/PlanetsLib) has tools for creating planets and moons.
 * [Quality Lib](https://mods.factorio.com/mod/quality-lib) by Davoness has tools to change values of items/entities for different quality levels; see the "magic tricks" section below.
+* The Factorio engine does not allow you to store data in the data stage and then use it in the control stage. [Big Data String 2](https://mods.factorio.com/mod/big-data-string2) by plexpt and dodo.the.last allows you to do this anyway by smuggling the data inside nested localised strings.
 * The base game code contains some useful functions, in `core/lualib`.
+
+Library mods useful for implementing magic tricks (see below):
+
+* [Beacon Interface](https://mods.factorio.com/mod/beacon-interface) by Quezler allows you to create beacons with effects that can be adjusted to arbitrary values in runtime scripts. See explanation of how this mod works in "magic tricks" section below.
+* The engine only allows beacons to use void or electric energy sources. [Nonstandard Beacons](https://mods.factorio.com/mod/zzz-nonstandard-beacons) by protocol_1903 and Quezler allows you to make beacons using other energy sources (burner, heat, or fluid).
+* [Washbox](https://mods.factorio.com/mod/washbox) by Quezler allows you to create recipes that require holding an item in a fast-moving stream of fluid, without consuming the fluid.
 
 ### Automatic publishing
 
@@ -163,6 +182,15 @@ Here's some additional ideas for magic tricks that I haven't seen implemented.
 
 ### Specific advice on coding
 
+* Lua is reference-based, similar to other scripting languages like Python. For example if you define `x = {1, 2, 3}` and then `y = x`, then there is only one table in memory, with two variables holding references to that same table. If you modify `y`, that one table is modified, so printing out `x` will also show the modifications. You can use `y = table.deepcopy(x)` to create a copy of the table, which can then be modified without affecting the table referenced by `x`. This `table.deepcopy` function is created in the base game's util.lua.
+* In the control stage, many variables should be stored in the [storage](https://lua-api.factorio.com/latest/auxiliary/storage.html) table (which was called `global` before the 2.0 update). Storage is preserved across saving and loading, and is synchronized between players in multiplayer. If you use variables in the control stage that are not in storage, and they ever have different values for different players, you can cause a [desync](https://wiki.factorio.com/Tutorial:Modding_tutorial/Gangsir#Multiplayer_and_desyncs) which will crash multiplayer games.
+* During the data stage, all mods share the same workspace, so for example globals defined in one mod are visible to other mods that run later, and can be overwritten.
+	* So for example if you define a global like `mod_name` in shared.lua, which is imported in data.lua, and then use the global in your data-updates.lua, this will appear to work when your mod is the only mod enabled. But when you run your mod with other mods loaded, those mods can overwrite that global, so you should re-import shared.lua in data-updates.lua.
+* During the control stage, mods run in separate VMs, so they do not share global variables. For mods to interact, you can use [remote interfaces](https://lua-api.factorio.com/latest/classes/LuaRemote.html) to define a function in one mod and call it in another mod. If you call a remote interface with arguments, those arguments are copied, so for example if you pass a table as argument and the remote function modifies the table, the original table in your mod will not be modified. You cannot pass functions as arguments.
+	* Because mods run in separate VMs, to inspect their data using the in-game console you can run commands in the VM of a particular mod, for example: `/c __my-mod__ game.player.print(serpent.dump(storage))`
+* You can `require()` code files from other mods in the data stage or control stage. In the control stage, this will load the other mod's file in your mod's VM, not their VM.
+* Lua has [string-matching functions](https://www.lua.org/pil/contents.html#20) but they do not use conventional regexes. Instead they use a unique syntax that is less powerful than ordinary regexes.
+* A lot of Lua tutorials will spend a lot of time on metatables, classes, and inheritance. Most of this is not really necessary for Factorio modding. If you want tables in `storage` to keep their metatables, you need to call [register_metatable](https://lua-api.factorio.com/latest/classes/LuaBootstrap.html#register_metatable).
 * When defining prototypes in code, you can explicitly write the entire table. Alternatively, you can use `table.deepcopy` to copy an existing similar prototype, then change various fields, like the name, icon, `minable.result` or `place_result`, etc. The deepcopy approach has the disadvantage of unexpected interactions with the rest of your mod, or other mods, since the values you think you're copying might have been changed elsewhere. The explicit approach has the disadvantage of needing to set all the fields explicitly, so you risk forgetting to set some more subtle fields like item sounds (pick, drop, inventory_move) and crafting machine tints for recipes. For large overhaul mods the best approach is probably to explicitly define prototypes but using a helper function to easily set / avoid forgetting to set the subtler fields.
 * Some modding effects may require you to run [`surface.find_entities_filtered()`](https://lua-api.factorio.com/latest/classes/LuaSurface.html#find_entities_filtered) on every nth tick so that you can update all buildings/whatever of a specific type on all planets. You may expect this function to be fast, since the engine frequently needs to find all pipes or enemy bases or whatever to update them, so you might think it already has lists of entities by type/name ready to go. However, this is not the case, the function is slow. In my experience, calling this function will cause noticeable lag, like dropping multiple frames every time your script runs. Instead, you can should rely on caching, meaning you run `find_entities_filtered` once when the game starts, and store it in `storage.whatever`. You can listen to events like `on_built_entity` and `on_player_mined_entity` to update the cache without re-running the slow scan.
 
