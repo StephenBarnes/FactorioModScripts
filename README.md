@@ -84,6 +84,7 @@ Factorio's world generation system changed significantly in the 2.0 update. [Thi
 * I recommend opening Wube's Lua code directory in a separate IDE window. On Linux+Steam it's at `~/.local/share/Steam/steamapps/common/Factorio/data/` but yours might be in [other places](https://wiki.factorio.com/Application_directory). You can search through this to find the base game's code for defining prototypes and locale strings.
 * [Factorio Tools](https://github.com/Hornwitser/factorio_tools) by Hornwitser has command-line tools for debugging/inspecting Factorio-related things, such as figuring out desyncs.
 * I recommend making a simple mod with only an `info.json` file with dependencies on several testing mods so you can toggle them all on and off easily. Give it a name like "○○○○○○ Testing mods" so it's at the top of the mod list. My current mod has dependencies on `"EditorExtensions", "factoryplanner", "creative-space-platform-hub", "circuit-connector-placement-helper"`.
+* You can hold your mouse over an entity and press control-shift-F to view information about its prototype. You can also press control-shift-E to search through all the prototypes in the game.
 
 Mods useful when developing mods:
 
@@ -175,6 +176,9 @@ The community project [PlanetsLib](https://mods.factorio.com/mod/PlanetsLib) is 
 	* This needs to include an `autoplace_settings` field with *all* of the tiles, decoratives, and entities that should spawn on your planet.
 	* To control placement of tiles, entities, and decoratives, you need to define noise expressions, which are basically functions of (x, y) coordinates that evaluate to the probability of each thing being placed at that coordinate. See the section on noise expressions above. Each tile, entity, and decorative has an [`autoplace` field](https://lua-api.factorio.com/latest/types/AutoplaceSpecification.html) that connects its probability and richness to a specific [noise expression](https://lua-api.factorio.com/latest/types/NoiseExpression.html).
 	* Set the `autoplace_controls` to create sliders for resource size and richness when the player starts a new game. You don't need to create sliders for everything.
+* Create a technology with an effect of type "unlock-space-location" to unlock travel to the planet.
+* Register [space connection prototypes](https://lua-api.factorio.com/latest/prototypes/SpaceConnectionPrototype.html) to draw connections on the space map that space platforms can travel to get to/from your planet. Space connections have asteroid spawn definitions describing how many of each type of asteroid spawns at each point along the route.
+* Register prototypes for all of the items, techs, recipes, and buildings you want on the planet.
 * If you want to implement new gameplay mechanics, you might need to use runtime scripting, and possibly "magic tricks" (see section below).
 
 
