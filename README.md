@@ -95,7 +95,7 @@ Mods useful when developing mods:
 
 ### Libraries
 
-Some code libraries that you can add as dependencies of your mod. You can import Lua files from other mods into your mod using `require "__OtherMod__/directory/filename"`.
+Some mods that you can add as dependencies of your mod. You can import Lua files from other mods into your mod using `require "__OtherMod__/directory/filename"`.
 
 * [flib / Factorio Library](https://github.com/factoriolib/flib) is a set of utility functions.
 * [PlanetsLib](https://mods.factorio.com/mod/PlanetsLib) has tools for creating planets and moons.
@@ -103,11 +103,12 @@ Some code libraries that you can add as dependencies of your mod. You can import
 * The Factorio engine does not allow you to store data in the data stage and then use it in the control stage. [Big Data String 2](https://mods.factorio.com/mod/big-data-string2) by plexpt and dodo.the.last allows you to do this anyway by smuggling the data inside nested localised strings.
 * The base game code contains some useful functions, in `core/lualib`.
 
-Library mods useful for implementing magic tricks (see below):
+Some dependency mods that aren't exactly libraries but provide additional tools for creating mods.
 
-* [Beacon Interface](https://mods.factorio.com/mod/beacon-interface) by Quezler allows you to create beacons with effects that can be adjusted to arbitrary values in runtime scripts. See explanation of how this mod works in "magic tricks" section below.
+* [Beacon Interface](https://mods.factorio.com/mod/beacon-interface) by Quezler allows you to create beacons with effects that can be adjusted to arbitrary values in runtime scripts. See explanation of how this mod works, and some uses of it, in the "magic tricks" section below.
 * The engine only allows beacons to use void or electric energy sources. [Nonstandard Beacons](https://mods.factorio.com/mod/zzz-nonstandard-beacons) by protocol_1903 and Quezler allows you to make beacons using other energy sources (burner, heat, or fluid).
 * [Washbox](https://mods.factorio.com/mod/washbox) by Quezler allows you to create recipes that require holding an item in a fast-moving stream of fluid, without consuming the fluid.
+* [Multi-spoil](https://mods.factorio.com/mod/multispoil) by LambdaLemon allows you to make one item spoil into multiple other items, each with a different count and probability.
 
 ### Automatic publishing
 
