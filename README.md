@@ -73,7 +73,7 @@ Gemini models are useful for adding things to images. For example, I used Gemini
 
 #### World generation / autoplace / noise expressions
 
-Factorio's world generation system changed significantly in the 2.0 update. [This](https://togos.github.io/togos-example-noise-programs/) was a good tutorial for the old system. The new system works almost the same conceptually, but noise expressions are now written as strings instead of Lua tables. I am not aware of any tutorials for the new worldgen system. If you want to do worldgen coding, I would recommend understanding that tutorial conceptually, then looking at the base game's Lua code and [API docs](https://lua-api.factorio.com/latest/auxiliary/noise-expressions.html).
+Factorio's world generation system changed significantly in the 2.0 update. [This](https://togos.github.io/togos-example-noise-programs/) was a good tutorial for the old system. The new system works almost the same conceptually, but noise expressions are now written as strings instead of Lua tables. I am not aware of any tutorials for the new worldgen system. If you want to do worldgen coding, I would recommend understanding that tutorial conceptually, then looking at the base game's Lua code (for example in `space-age/prototypes/planet/planet-(Planet)-map-gen.lua`) and the [API docs](https://lua-api.factorio.com/latest/auxiliary/noise-expressions.html).
 
 [Noise Tools](https://mods.factorio.com/mod/noise-tools) by Earendel is a mod that helps to visualize noise expressions for debugging.
 
@@ -119,6 +119,64 @@ Some dependency mods that aren't exactly libraries but provide additional tools 
 ### Starter/template mods
 
 * [Factorio Example Mod](https://github.com/ZwerOxotnik/factorio-example-mod) by ZwerOxotnik is a starter/template mod that you can fork and edit instead of writing a mod from scratch.
+
+### How to do specific things
+
+This section has specific instructions for what you need to do to make common types of mods.
+
+#### Adding a new resource
+
+If you want to add a new type of ore patch, gas well, or similar:
+
+* Register a [resource entity](https://lua-api.factorio.com/latest/prototypes/ResourceEntityPrototype.html). There are some examples in `base/prototypes/entity/resources.lua`.
+	* The resource entity prototype's `category` determines which machines can mine it - mining drills, big mining drills, pumpjacks, etc. If you want only a specific new machine to mine it, you need to register a [resource category](https://lua-api.factorio.com/latest/prototypes/ResourceCategory.html) and a [mining drill](https://lua-api.factorio.com/latest/prototypes/MiningDrillPrototype.html#resource_categories) with that resource category.
+	* Set the resource entity's [.minable](https://lua-api.factorio.com/latest/prototypes/EntityPrototype.html#minable) to determine which item it produces and how long it takes to mine.
+* If the minable resource entity produces a new item/fluid, you will also need to register a prototype for that.
+* Each planet has tables of all the entities, tiles, and decoratives that are autoplaced on it when terrain is generated. So you need to add your resource entity to those lists. For example: `data.raw.planet.nauvis.map_gen_settings.autoplace_settings.entity.settings["my-ore"] = {}`
+* To control where your ore spawns, you need to use autoplaces and noise expressions. If your resource spawns similarly to base-game resources like ore (big round patches) or crude oil wells (small clusters of dots), you can do this the same way it's done in `base/prototypes/entity/resources.lua`, by importing `resource-autoplace` and then setting `ResourceEntityPrototype.autoplace` by calling functions like `resource_autoplace.resource_autoplace_settings`. If you want your resource to spawn in a different way, you'll need to write custom noise expressions, which is more difficult. See the section on world generation above.
+* When starting a new game, the sliders for resources are called [autoplace controls](https://lua-api.factorio.com/latest/prototypes/AutoplaceControl.html). If you want a slider, you need to register an autoplace control. See `base/prototypes/autoplace-controls.lua` for examples.
+	* Each planet keeps a list of autoplace controls that apply to that planet. So if you want a slider, you also need to add it to the list of controls for your planet, for example: `data.raw.planet.nauvis.map_gen_settings.autoplace_controls["my-ore"] = {}`
+* Define [locale strings](https://wiki.factorio.com/Tutorial:Localisation) in entity-name, item/fluid-name, and optionally the autoplace control. (The base game reuses the entity name for the autoplace control's name.)
+
+#### Creating a crafting machine
+
+* Figure out if you want to make a "furnace" or an "assembling-machine". The main difference is that furnaces automatically select their recipe based on input, and can only have 1 input item, while assembling-machines need a recipe selected by the player.
+	* If your machine can only do 1 recipe, you can use an assembling-machine and set the `fixed_recipe` field.
+* Register either a [FurnacePrototype](https://lua-api.factorio.com/latest/prototypes/FurnacePrototype.html) or an [AssemblingMachinePrototype](https://lua-api.factorio.com/latest/prototypes/AssemblingMachinePrototype.html).
+	* Set the machine's graphics_set to make it visible in game. You can use animation and idle_animation, and also working_visualisations which can have some layers tinted based on the current recipe's colors. If you want a static picture instead of animation, that's implemented by making it an animation with frame_count set to 1.
+	* Set the machine's working_sound. You can copy this from an existing machine, or use multiple sounds layered and optionally played at specific frames of the working visualisations.
+	* Set the circuit_connector. You can use [Circuit connector placement helper](https://mods.factorio.com/mod/circuit-connector-placement-helper) to pick the circuit picture and position.
+* If the machine is meant to only do certain recipes, you need to register a new [recipe category](https://lua-api.factorio.com/latest/prototypes/RecipeCategory.html) and then give that category to your recipes and your crafting machine.
+* Create an item with a place_result of the crafting machine entity. On the entity, set the placeable_by and minable to give the item back. Give the item the same name as the entity, so that their entries merge in the Factoriopedia.
+* Create a recipe for the machine item. The recipe should have the same name as the item and machine, so the entries merge in the Factoriopedia.
+* Add the item's recipe to a technology, or create a new technology for it.
+* Define a [locale string](https://wiki.factorio.com/Tutorial:Localisation) in entity-name and optionally entity-description. (This will be reused for the item and the recipe, unless you explicitly give those different strings.)
+
+#### Creating a planet or moon
+
+Creating a planet can take a lot of work, depending on what exactly you want to do.
+
+Look at the files in your Factorio install at `data/space-age/prototypes/planet/` for examples. 
+
+The community project [PlanetsLib](https://mods.factorio.com/mod/PlanetsLib) is a mod that you can include as a dependency to provide functions helpful for creating planets and moons.
+
+* Figure out the design and theme of the planet. Where does the planet fit in the planet progression? What does the terrain look like? What new machines, items, recipes, or mechanics do you want to put on it? Look at existing planet mods for inspiration.
+* Create a [planet prototype](https://lua-api.factorio.com/latest/prototypes/PlanetPrototype.html). 
+* By default, all planets orbit the same sun. If you want to make a moon orbiting another planet, or a separate solar system, you can use PlanetsLib to create non-sun orbits by drawing an extra orbit ring on the space map.
+* Specify the values of surface properties in the planet prototype. These are numbers for things like gravity, pressure, and magnetic field. Buildings sometimes have surface conditions that only allow them to be placed on certain surfaces, and same for recipes. You may want to register new [surface property prototypes](https://lua-api.factorio.com/latest/prototypes/SurfacePropertyPrototype.html) to restrict buildings/recipes to your planet. PlanetsLib includes some disabled surface properties that you can enable, for standardizing surface properties between mods.
+* PlanetPrototype inherits from SpaceLocationPrototype, since every planet has a location on the space map where space platforms park or travel to/from. So you need to specify some data about the space location, such as the asteroid spawn definitions. These define the asteroids that appear around spaceships parked at the planet.
+* Define various things to help create the desired atmosphere of your planet.
+	* Set [PlanetPrototype.persistent_ambient_sounds](https://lua-api.factorio.com/latest/types/PersistentWorldAmbientSoundsDefinition.html) to create atmospheric sounds like wind, rain, birds, or thunder. See examples in `space-age/prototypes/planet/planet.lua`.
+	* Set music for your planet. PlanetsLib includes a function for copying music from another planet, for example `PlanetsLib.borrow_music(data.raw.planet.vulcanus, myPlanetPrototype)`
+	* Set [PlanetPrototype.surface_render_parameters](https://lua-api.factorio.com/latest/types/SurfaceRenderParameters.html) to create fog or clouds. You can also use color lookup tables to apply color filters to the planet at different times of day; for example, this is used to apply a subtle purple tint to everything on Fulgora.
+* Set PlanetPrototype.pollutant_type, if you want some kind of pollutant on your planet, like pollution or spores. If you want to make a new pollutant type, you need to register an [airborne pollutant prototype](https://lua-api.factorio.com/latest/prototypes/AirbornePollutantPrototype.html), and then also edit machine prototypes to emit this pollutant type, and create enemy spawners on the surface.
+* Set PlanetPrototype.lightning_properties, if you want lightning.
+* Set [PlanetPrototype.map_gen_settings](https://lua-api.factorio.com/latest/types/PlanetPrototypeMapGenSettings.html) to control terrain generation and placement of resources, cliffs, water, entities like enemy spawners or boulders, and decoratives (like small plants or craters that usually get removed when you build concrete over them). See `space-age/prototypes/planet/planet-map-gen.lua` for examples.
+	* This needs to include an `autoplace_settings` field with *all* of the tiles, decoratives, and entities that should spawn on your planet.
+	* To control placement of tiles, entities, and decoratives, you need to define noise expressions, which are basically functions of (x, y) coordinates that evaluate to the probability of each thing being placed at that coordinate. See the section on noise expressions above. Each tile, entity, and decorative has an [`autoplace` field](https://lua-api.factorio.com/latest/types/AutoplaceSpecification.html) that connects its probability and richness to a specific [noise expression](https://lua-api.factorio.com/latest/types/NoiseExpression.html).
+	* Set the `autoplace_controls` to create sliders for resource size and richness when the player starts a new game. You don't need to create sliders for everything.
+* If you want to implement new gameplay mechanics, you might need to use runtime scripting, and possibly "magic tricks" (see section below).
+
 
 ### Magic tricks
 
