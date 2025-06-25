@@ -64,11 +64,12 @@ Gemini models are useful for adding things to images. For example, I used Gemini
 
 ### Tutorials for aspects of coding
 
-* If you already know basic programming, you can use [Learn Lua In Y Minutes](https://learnxinyminutes.com/lua/) to quickly get familiar with Lua. You can mostly ignore everything about metatables and classes.
+* If you already know basic programming, you can use [Learn Lua In Y Minutes](https://learnxinyminutes.com/lua/) to quickly get familiar with Lua. You can mostly ignore everything about metatables and classes, since most mods don't use them.
+* [General introductory modding tutorial](https://wiki.factorio.com/Tutorial:Modding_tutorial/Gangsir) by Gangsir.
 * [Using settings in mods](https://wiki.factorio.com/Tutorial:Mod_settings)
-* [Porting mods to 2.0](https://github.com/tburrows13/factorio-2.0-mod-porting-guide)
+* [Porting mods to 2.0](https://github.com/tburrows13/factorio-2.0-mod-porting-guide) by Xorimuth.
 * [Localization](https://wiki.factorio.com/Tutorial:Localisation)
-* [GUI modding](https://github.com/ClaudeMetz/UntitledGuiGuide/wiki)
+* [GUI modding](https://github.com/ClaudeMetz/UntitledGuiGuide/wiki) by Therenas.
 	* Also see [Factorio GUI Style Guide](https://man.sr.ht/~raiguard/factorio-gui-style-guide/) by Raiguard.
 
 #### World generation / autoplace / noise expressions
@@ -79,12 +80,13 @@ Factorio's world generation system changed significantly in the 2.0 update. [Thi
 
 ### Dev environment
 
+* You can write and edit mods as folders in the mods directory. You don't need to zip them, they can just be a plain folder. Before uploading to the mod portal, you need to zip them, for example using the `zipmod.sh` script in this repo.
 * [Factorio Modding Toolkit](https://github.com/justarandomgeek/vscode-factoriomod-debug/blob/current/doc/workspace.md) includes a VSCode extension making the editor aware of the Factorio API.
 	* I strongly recommend setting this up. It is very helpful for catching errors and type-checking, and includes a debugger/profiler.
+* You can hold your mouse over an entity and press control-shift-F to view information about its prototype. You can also press control-shift-E to search through all the prototypes in the game.
 * I recommend opening Wube's Lua code directory in a separate IDE window. On Linux+Steam it's at `~/.local/share/Steam/steamapps/common/Factorio/data/` but yours might be in [other places](https://wiki.factorio.com/Application_directory). You can search through this to find the base game's code for defining prototypes and locale strings.
 * [Factorio Tools](https://github.com/Hornwitser/factorio_tools) by Hornwitser has command-line tools for debugging/inspecting Factorio-related things, such as figuring out desyncs.
-* I recommend making a simple mod with only an `info.json` file with dependencies on several testing mods so you can toggle them all on and off easily. Give it a name like "○○○○○○ Testing mods" so it's at the top of the mod list. My current mod has dependencies on `"EditorExtensions", "factoryplanner", "creative-space-platform-hub", "circuit-connector-placement-helper"`.
-* You can hold your mouse over an entity and press control-shift-F to view information about its prototype. You can also press control-shift-E to search through all the prototypes in the game.
+* I recommend making a simple mod with only an `info.json` file with dependencies on several testing mods so you can toggle them all on and off easily. Give it a name like "○○○○○○ Testing mods" so it's at the top of the mod list. My current mod has dependencies on `"EditorExtensions", "factoryplanner", "circuit-connector-placement-helper"`, and optional dependencies on `"creative-space-platform-hub"` (for testing with Space Age) and `"even-pickier-dollies"` (for testing compatibility).
 
 Mods useful when developing mods:
 
@@ -92,7 +94,8 @@ Mods useful when developing mods:
 * [Creative Space Platform Hub](https://mods.factorio.com/mod/creative-space-platform-hub) by Quezler is useful for testing stuff involving space platforms.
 * [Noise Tools](https://mods.factorio.com/mod/noise-tools) by Earendel can be used to visualize noise expressions.
 * [Circuit connector placement helper](https://mods.factorio.com/mod/circuit-connector-placement-helper) by Quezler is useful for choosing and placing the circuit connectors of buildings.
-* A planner mod like [Factory Planner](https://mods.factorio.com/mod/factoryplanner) by Therenas is useful for balancing recipes. For example, comparing the raw materials needed to make your modded circuit with the raw materials needed to make base-game blue circuits, or comparing the number of machines and electric energy needed by different recipe paths with the same end product.
+* [Style Explorer](https://mods.factorio.com/mod/style-explorer) by _CodeGreen lets you look through styles for GUIs.
+* A planner mod like [Factory Planner](https://mods.factorio.com/mod/factoryplanner) by Therenas is useful for balancing recipes. For example, you can use it to compare the raw materials needed to make your new circuit item with the raw materials needed to make base-game blue circuits, or compare the number of machines and electric power needed by different recipe paths with the same end product.
 
 ### Libraries
 
@@ -100,6 +103,7 @@ Some mods that you can add as dependencies of your mod. You can import Lua files
 
 * [flib / Factorio Library](https://github.com/factoriolib/flib) is a set of utility functions.
 * [PlanetsLib](https://mods.factorio.com/mod/PlanetsLib) has tools for creating planets and moons.
+* [glib / GUI Library](https://mods.factorio.com/mod/glib) by _CodeGreen has tools for creating GUIs.
 * [Quality Lib](https://mods.factorio.com/mod/quality-lib) by Davoness has tools to change values of items/entities for different quality levels; see the "magic tricks" section below.
 * The Factorio engine does not allow you to store data in the data stage and then use it in the control stage. [Big Data String 2](https://mods.factorio.com/mod/big-data-string2) by plexpt and dodo.the.last allows you to do this anyway by smuggling the data inside nested localised strings.
 * The base game code contains some useful functions, in `core/lualib`.
