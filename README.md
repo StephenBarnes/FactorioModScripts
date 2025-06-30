@@ -26,6 +26,10 @@ Crucial background: Factorio mods run in 3 stages: settings, then data/prototype
 
 ## Graphics
 
+### General graphics tips
+
+You can control-alt-click on the "settings" button to access a secret settings menu called "the rest". There's a hidden setting "runtime-sprite-reload" that allows you to modify sprites and see them in-game without needing to restart the game. You'll still need to restart the game when changing prototypes.
+
 ### Ready-made graphics
 
 When using graphics from other people, be aware of their licenses, which may have various requirements, such as requiring you to release your mod under the same license, requiring attribution, etc.
@@ -198,6 +202,17 @@ You can post a [request](https://forums.factorio.com/viewforum.php?f=28) for Wub
 (There have also been two attempts that I am aware of to enable direct modding of the Factorio engine, outside of the Lua modding system. One of these is [Rivets](https://github.com/factorio-rivets/rivets-rs), which wasn't fully finished for Factorio 1.1 and hasn't been updated for 2.0. For the other attempt, I can't find the repo now but it was eventually abandoned.)
 
 Generally these "magic tricks" involve the creation of hidden entity prototypes / items / surfaces, along with control-stage scripting to create or replace things using these hidden objects. I call them "magic tricks" because they involve doing a bunch of behind-the-scenes stuff not visible to the player to create effects that seem impossible within the engine.
+
+Most magic tricks could be implemented using control-stage scripting with on_tick handlers. However, that's generally bad for performance, so it's better to implement them in other ways. The examples below instead use hidden entities and the like, in order to offload most of the work onto the game engine, which is much faster than Lua on_tick handlers.
+
+Some general techniques useful for magic tricks:
+
+* When a building is placed in the game, destroy it and replace it with a different building that looks the same, but has a different prototype and therefore different properties. The replacement can be chosen based on various conditions like the planet or location of the building.
+* When a building is placed in the game, place one or more additional buildings, which interact with the original in some way. These are sometimes called "compound entities" or "child entities", and have been implemented by many mods.
+	* For example, in my overhaul LSA, [this](https://github.com/StephenBarnes/LegendarySpaceAge/blob/master/const/child-entity-const.lua) file defines the child entities required by certain entities, and [this](https://github.com/StephenBarnes/LegendarySpaceAge/blob/master/control/child-entities.lua) file creates entities at runtime according to those requirements. It also handles entities being moved by Even Pickier Dollies, and can move child entities around the parent when the parent is rotated.
+* Use [proxy containers](https://lua-api.factorio.com/latest/prototypes/ProxyContainerPrototype.html), which are containers that provide an alternate access point to a specific inventory of a specific machine.
+* Create a hidden surface. When a building is placed, create corresponding machines on the hidden surface. These machines could be assemblers, inserters, combinators, proxy containers, etc. You can link the visible building to buildings on the hidden surface using circuit connections, linked fluid connections, or proxy containers.
+
 
 #### Magic trick examples
 
