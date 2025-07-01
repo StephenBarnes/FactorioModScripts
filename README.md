@@ -28,7 +28,7 @@ Crucial background: Factorio mods run in 3 stages: settings, then data/prototype
 
 ### General graphics tips
 
-You can control-alt-click on the "settings" button to access a secret settings menu called "the rest". There's a hidden setting "runtime-sprite-reload" that allows you to modify sprites and see them in-game without needing to restart the game. You'll still need to restart the game when changing prototypes.
+You can control-alt-click on the "settings" button to access a secret settings menu called "the rest". There's a hidden setting "runtime-sprite-reload" that allows you to modify sprites and see them in-game without needing to restart the game. You'll still need to restart the game when changing prototypes. The setting harms performance a lot, so turn it off when not working on graphics.
 
 ### Ready-made graphics
 
@@ -210,7 +210,7 @@ Some general techniques useful for magic tricks:
 * When a building is placed in the game, destroy it and replace it with a different building that looks the same, but has a different prototype and therefore different properties. The replacement can be chosen based on various conditions like the planet or location of the building.
 * When a building is placed in the game, place one or more additional buildings, which interact with the original in some way. These are sometimes called "compound entities" or "child entities", and have been implemented by many mods.
 	* For example, in my overhaul LSA, [this](https://github.com/StephenBarnes/LegendarySpaceAge/blob/master/const/child-entity-const.lua) file defines the child entities required by certain entities, and [this](https://github.com/StephenBarnes/LegendarySpaceAge/blob/master/control/child-entities.lua) file creates entities at runtime according to those requirements. It also handles entities being moved by Even Pickier Dollies, and can move child entities around the parent when the parent is rotated.
-* Use [proxy containers](https://lua-api.factorio.com/latest/prototypes/ProxyContainerPrototype.html), which are containers that provide an alternate access point to a specific inventory of a specific machine.
+* Use [proxy containers](https://lua-api.factorio.com/latest/prototypes/ProxyContainerPrototype.html), which are containers that provide an alternate access point to a specific inventory of a specific machine. (Proxy containers are different from [linked containers](https://lua-api.factorio.com/latest/prototypes/LinkedContainerPrototype.html), which can only link to other linked containers.)
 * Create a hidden surface. When a building is placed, create corresponding machines on the hidden surface. These machines could be assemblers, inserters, combinators, proxy containers, etc. You can link the visible building to buildings on the hidden surface using circuit connections, linked fluid connections, or proxy containers.
 
 
