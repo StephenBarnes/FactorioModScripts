@@ -28,7 +28,7 @@ first_version_line=$(grep -m1 '^Version:' "$folder/changelog.txt")
 if [ -z "$first_version_line" ]; then
   echo "WARNING: No 'Version:' line in changelog"
 else
-  changelog_version=$(echo "$first_version_line" | grep -oP '(?<=Version:\s).*')
+  changelog_version=$(echo "$first_version_line" | grep -oP '(?<=Version:\s).*' | tr -d '\r')
   if [ "$changelog_version" != "$version" ]; then
     echo "Version mismatch: info.json has $version but changelog has $changelog_version"
     exit 1
